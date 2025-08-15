@@ -161,6 +161,13 @@ public class CacheProvider {
     }
 
     /**
+     * @return artifact retrieval cache
+     */
+    public static Cache getArtifactRetrievalCache() {
+        return getCache(APIConstants.ARTIFACT_RETRIEVAL_CACHE_NAME);
+    }
+
+    /**
      * @return Tenant Config cache
      */
     @UsedByMigrationClient
@@ -337,6 +344,22 @@ public class CacheProvider {
             long defaultCacheTimeout = getDefaultCacheTimeout();
             return APIUtil.getCache(APIConstants.API_MANAGER_CACHE_MANAGER,
                     APIConstants.GATEWAY_INVALID_INTERNAL_KEY_CACHE_NAME, defaultCacheTimeout, defaultCacheTimeout);
+        }
+    }
+
+    /**
+     * Create and return the Artifact Retrieval Cache
+     */
+    public static Cache createArtifactRetrievalCache() {
+        String artifactRetrievalCacheExpiry = getApiManagerConfiguration().getFirstProperty(
+                APIConstants.ARTIFACT_RETRIEVAL_CACHE_EXPIRY);
+        if (artifactRetrievalCacheExpiry != null) {
+            return getCache(APIConstants.API_MANAGER_CACHE_MANAGER, APIConstants.ARTIFACT_RETRIEVAL_CACHE_NAME,
+                    Long.parseLong(artifactRetrievalCacheExpiry), Long.parseLong(artifactRetrievalCacheExpiry));
+        } else {
+            long defaultCacheTimeout = getDefaultCacheTimeout();
+            return getCache(APIConstants.API_MANAGER_CACHE_MANAGER, APIConstants.ARTIFACT_RETRIEVAL_CACHE_NAME,
+                    defaultCacheTimeout, defaultCacheTimeout);
         }
     }
 
@@ -603,6 +626,8 @@ public class CacheProvider {
                 .removeCache(CacheProvider.getGatewaySignedJWTParseCache().getName());
         Caching.getCacheManager(APIConstants.API_MANAGER_CACHE_MANAGER)
                 .removeCache(CacheProvider.getGatewayIntrospectCache().getName());
+        Caching.getCacheManager(APIConstants.API_MANAGER_CACHE_MANAGER)
+                .removeCache(CacheProvider.getArtifactRetrievalCache().getName());
     }
 
 }

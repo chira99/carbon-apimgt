@@ -163,6 +163,12 @@
           as 'false' to completely disable JWTClaimCache.
          -->
         <EnableJWTClaimCache>true</EnableJWTClaimCache>
+
+        <!-- This parameter specifies whether the gateway artifact retrieval cache is enabled or not.
+             If this is enabled, the API retrieval will be cached for the specified expiry time. -->
+        <ArtifactRetrievalCacheEnabled>true</ArtifactRetrievalCacheEnabled>
+        <ArtifactRetrievalCacheExpiry>900</ArtifactRetrievalCacheExpiry>
+
     </CacheConfigurations>
 
     <!--

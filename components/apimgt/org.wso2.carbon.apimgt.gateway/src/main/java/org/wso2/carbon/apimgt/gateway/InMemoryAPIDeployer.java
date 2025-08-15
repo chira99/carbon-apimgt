@@ -48,6 +48,7 @@ import org.wso2.carbon.apimgt.gateway.service.APIGatewayAdmin;
 import org.wso2.carbon.apimgt.impl.APIConstants;
 import org.wso2.carbon.apimgt.impl.APIManagerConfiguration;
 import org.wso2.carbon.apimgt.impl.caching.CacheInvalidationServiceImpl;
+import org.wso2.carbon.apimgt.impl.caching.CacheProvider;
 import org.wso2.carbon.apimgt.impl.dto.ExtendedJWTConfigurationDto;
 import org.wso2.carbon.apimgt.impl.dto.GatewayArtifactSynchronizerProperties;
 import org.wso2.carbon.apimgt.impl.dto.GatewayCleanupSkipList;
@@ -238,8 +239,10 @@ public class InMemoryAPIDeployer {
                     PrivilegedCarbonContext.startTenantFlow();
                     PrivilegedCarbonContext.getThreadLocalCarbonContext()
                             .setTenantDomain(tenantDomain, true);
-                    List<String> gatewayRuntimeArtifacts = ServiceReferenceHolder.getInstance().getArtifactRetriever()
-                            .retrieveAllArtifacts(encodedString, tenantDomain);
+
+                    // Use cached artifacts retrieval
+                    List<String> gatewayRuntimeArtifacts = getCachedArtifacts(encodedString, tenantDomain);
+
                     if (gatewayRuntimeArtifacts.isEmpty()) {
                         return true;
                     }
@@ -652,5 +655,58 @@ public class InMemoryAPIDeployer {
     private String generateAPIKeyForEndpoints(GatewayAPIDTO gatewayEvent) {
 
         return gatewayEvent.getTenantDomain() + "_" + gatewayEvent.getName() + "_" + gatewayEvent.getVersion();
+    }
+
+    /**
+     * Retrieves cached artifacts from the cache or storage.
+     *
+     * @param encodedString The encoded string representing the API context and version.
+     * @param tenantDomain  The tenant domain of the API.
+     * @return A list of cached artifacts.
+     * @throws ArtifactSynchronizerException If an error occurs while retrieving artifacts.
+     */
+    private List<String> getCachedArtifacts(String encodedString, String tenantDomain)
+            throws ArtifactSynchronizerException {
+
+        APIManagerConfiguration config = ServiceReferenceHolder.getInstance().getAPIManagerConfiguration();
+
+        // Check if artifact retrieval caching is enabled
+        if (config.isArtifactRetrievalCacheEnabled()) {
+            String cacheKey = encodedString + "_" + tenantDomain;
+            Object cachedArtifacts = CacheProvider.getArtifactRetrievalCache().get(cacheKey);
+
+            if (cachedArtifacts instanceof List) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Retrieved artifacts from cache for key: " + cacheKey);
+                }
+                return (List<String>) cachedArtifacts;
+            }
+
+            // Double-checked locking pattern for thread safety
+            if (cachedArtifacts == null) {
+                synchronized (this.getClass().getName().concat(cacheKey).intern()) {
+                    cachedArtifacts = CacheProvider.getArtifactRetrievalCache().get(cacheKey);
+                    if (cachedArtifacts instanceof List) {
+                        return (List<String>) cachedArtifacts;
+                    }
+
+                    // Fetch from storage and cache the result
+                    List<String> artifactsFromStorage = ServiceReferenceHolder.getInstance().getArtifactRetriever()
+                            .retrieveAllArtifacts(encodedString, tenantDomain);
+
+                    if (artifactsFromStorage != null) {
+                        CacheProvider.getArtifactRetrievalCache().put(cacheKey, artifactsFromStorage);
+                        if (log.isDebugEnabled()) {
+                            log.debug("Cached artifacts for key: " + cacheKey + ", count: " +
+                                    artifactsFromStorage.size());}
+                        return artifactsFromStorage;
+                    }
+                }
+            }
+        }
+
+        // Fallback to direct retrieval if caching is disabled or failed
+        return ServiceReferenceHolder.getInstance().getArtifactRetriever()
+                .retrieveAllArtifacts(encodedString, tenantDomain);
     }
 }

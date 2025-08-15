@@ -2953,6 +2953,15 @@ public class APIManagerConfiguration {
         return false;
     }
 
+    public boolean isArtifactRetrievalCacheEnabled() {
+
+        String artifactRetrievalCacheExpiryEnabledString = getFirstProperty(APIConstants.ARTIFACT_RETRIEVAL_CACHE_EXPIRY);
+        if (StringUtils.isNotEmpty(artifactRetrievalCacheExpiryEnabledString)){
+            return Boolean.parseBoolean(artifactRetrievalCacheExpiryEnabledString);
+        }
+        return false;
+    }
+
     public void setDesignAssistantConfiguration(OMElement omElement){
         OMElement designAssistantEnableElement =
                 omElement.getFirstChildWithName(new QName(APIConstants.AI.DESIGN_ASSISTANT_ENABLED));

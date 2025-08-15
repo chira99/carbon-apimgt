@@ -1323,6 +1323,8 @@ public final class APIConstants {
     public static final String REST_API_TOKEN_CACHE_NAME = "RESTAPITokenCache";
     public static final String REST_API_INVALID_TOKEN_CACHE_NAME = "RESTAPIInvalidTokenCache";
     public static final String GATEWAY_JWT_TOKEN_CACHE = "GatewayJWTTokenCache";
+    public static final String ARTIFACT_RETRIEVAL_CACHE_NAME = "ARTIFACT_RETRIEVAL_CACHE";
+    public static final String ARTIFACT_RETRIEVAL_CACHE_EXPIRY = "Cache.ArtifactRetrievalCacheExpiry";
 
     public static final String KEY_CACHE_NAME = "keyCache";
     public static final String API_CONTEXT_CACHE = "apiContextCache";

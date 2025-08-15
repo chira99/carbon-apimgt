@@ -202,6 +202,7 @@ public class TenantServiceCreator extends AbstractAxis2ConfigurationContextObser
         CacheProvider.createGatewayInternalKeyCache();
         CacheProvider.createGatewayInternalKeyDataCache();
         CacheProvider.createInvalidInternalKeyCache();
+        CacheProvider.createArtifactRetrievalCache();
     }
 
     /**
