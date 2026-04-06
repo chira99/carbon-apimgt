@@ -345,8 +345,10 @@ public class ApiKeyMgtDAO {
                         keyInfo.setStatus(rs.getString("STATUS"));
                         keyInfo.setAppId(rs.getInt("APP_ID"));
                         keyInfo.setApplicationId(rs.getString("APPLICATION_UUID"));
+                        keyInfo.setApplicationName(rs.getString("APPLICATION_NAME"));
                         keyInfo.setApiId(rs.getInt("API_ID"));
                         keyInfo.setApiUUId(rs.getString("API_UUID"));
+                        keyInfo.setApiName(rs.getString("API_NAME"));
                         long validityPeriodInSeconds = rs.getLong("VALIDITY_PERIOD");
                         if (validityPeriodInSeconds < 0) {
                             keyInfo.setExpiresAt(Long.MAX_VALUE);
