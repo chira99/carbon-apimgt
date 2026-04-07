@@ -547,8 +547,10 @@ class APIProviderImpl extends AbstractAPIManager implements APIProvider {
         validateResourceThrottlingTiers(api, tenantDomain);
         String normalizedGatewayVendor = APIUtil.setGatewayVendorBeforeInsertion(
                 api.getGatewayVendor(), api.getGatewayType());
-        boolean shouldValidateKeyManagers = !APIConstants.EXTERNAL_GATEWAY_VENDOR.equals(
-                APIUtil.handleGatewayVendorRetrieval(normalizedGatewayVendor));
+        boolean isDiscovered = api.isInitiatedFromGateway();
+        boolean isExplicitExternal = APIConstants.EXTERNAL_GATEWAY_VENDOR
+                .equals(APIUtil.handleGatewayVendorRetrieval(normalizedGatewayVendor));
+        boolean shouldValidateKeyManagers = !(isDiscovered && isExplicitExternal);
         // Skip key manager and scope validations for external gateway vendors.
         // Federated APIs imported via FederatedAPIDiscovery come with keyManagers null,
         // causing import failures. External gateway vendors manage their own key managers and scopes.
@@ -1036,9 +1038,12 @@ class APIProviderImpl extends AbstractAPIManager implements APIProvider {
         //Validate Transports
         validateAndSetTransports(api);
         validateAndSetAPISecurity(api);
-        String effectiveGatewayVendor = StringUtils.isNotBlank(api.getGatewayVendor()) ? api.getGatewayVendor()
-                : existingAPI.getGatewayVendor();
-        boolean shouldValidateKeyManagers = !APIConstants.EXTERNAL_GATEWAY_VENDOR.equals(effectiveGatewayVendor);
+        String effectiveGatewayVendor = StringUtils.isNotBlank(api.getGatewayVendor())
+                ? api.getGatewayVendor() : existingAPI.getGatewayVendor();
+        boolean isDiscovered = api.isInitiatedFromGateway() || existingAPI.isInitiatedFromGateway();
+        boolean isExplicitExternal = APIConstants.EXTERNAL_GATEWAY_VENDOR
+                .equals(APIUtil.handleGatewayVendorRetrieval(effectiveGatewayVendor));
+        boolean shouldValidateKeyManagers = !(isDiscovered && isExplicitExternal);
         // Skip key manager and scope validations for external gateway vendors.
         // Federated APIs imported via FederatedAPIDiscovery come with keyManagers null,
         // causing update failures. External gateway vendors manage their own key managers and scopes.
